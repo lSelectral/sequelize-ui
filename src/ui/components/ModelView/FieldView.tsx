@@ -7,6 +7,8 @@ import {
   justifyContent,
   padding,
   position,
+  backgroundColor,
+  space,
 } from '@src/ui/styles/classnames'
 import { breakWordsMinus8, list, panelHeader } from '@src/ui/styles/utils'
 import { noCase } from '@src/utils/string'
@@ -42,10 +44,10 @@ function FieldView({ field, onClickEdit, onClickDelete }: FieldViewProps) {
           ]}
         />
       </div>
-      <ul className={classnames(list, padding('p-2', 'pl-4'))}>
+      <ul className={classnames(list, padding('p-2', 'pl-4'), space('space-y-2'))}>
         <li>{displayDataType(field.type)}</li>
-        {field.primaryKey && <li>Primary key</li>}
-        {field.required && <li>Required</li>}
+        {field.primaryKey && <li className={classnames(backgroundColor('bg-red-600'))}>Primary key</li>}
+        {field.required && <li className={classnames(backgroundColor('bg-slate-400'))}>Required</li>}
         {field.unique && <li>Unique</li>}
       </ul>
     </>

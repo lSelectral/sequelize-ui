@@ -14,6 +14,7 @@ import { Override } from '@src/utils/types'
 import React from 'react'
 import { FieldProps } from '../shared/types'
 import { autofillDisable } from '../shared/utils'
+import { textColor } from 'tailwindcss-classnames'
 
 type CheckboxProps = Override<
   Omit<FieldProps<boolean, React.InputHTMLAttributes<HTMLInputElement>>, 'value'>,
@@ -42,7 +43,9 @@ function Checkbox({ id, label, checked, onChange, ...rest }: CheckboxProps): Rea
         {...autofillDisable}
         {...rest}
       />
-      <span className={classnames(padding('pl-2'), fontSize('text-sm'))}>{label}</span>
+      <span className={classnames(
+        textColor(rest.disabled ? 'text-gray-400' : 'text-gray-700', rest.disabled ? 'dark:text-slate-600' : 'dark:text-gray-300'   ),
+        padding('pl-2'), fontSize('text-sm'))}>{label}</span>
     </label>
   )
 }

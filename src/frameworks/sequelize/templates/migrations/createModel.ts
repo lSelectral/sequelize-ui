@@ -26,7 +26,7 @@ type CreateModelMigrationArgs = {
 export function createModelMigration({ model, dbOptions }: CreateModelMigrationArgs): string {
   return lines([
     // TODO refactor type defs to use either Sequelize or DataTypes
-    `const DataTypes = require('sequelize').DataTypes`,
+    `const { QueryInterface, Sequelize, DataTypes } = require('sequelize')`,
     blank(),
     `module.exports = {`,
     up({ model, dbOptions }),
@@ -39,6 +39,10 @@ function up({ model, dbOptions }: CreateModelMigrationArgs): string {
   const tableName = dbTableName({ model, dbOptions })
   return lines(
     [
+      '/**',
+      ' * @param {QueryInterface} queryInterface ',
+      ' * @param {Sequelize} Sequelize ',
+      ' */',
       `up: async (queryInterface, Sequelize) => {`,
       lines(
         [
@@ -61,6 +65,10 @@ function down({ model, dbOptions }: CreateModelMigrationArgs): string {
   const tableName = dbTableName({ model, dbOptions })
   return lines(
     [
+      '/**',
+      ' * @param {QueryInterface} queryInterface ',
+      ' * @param {Sequelize} Sequelize ',
+      ' */',
       `down: async (queryInterface, Sequelize) => {`,
       indent(2, `await queryInterface.dropTable('${tableName}');`),
       `},`,

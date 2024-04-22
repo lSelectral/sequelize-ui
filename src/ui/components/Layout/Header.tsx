@@ -23,13 +23,17 @@ import {
   zIndex,
 } from '@src/ui/styles/classnames'
 import { flexCenter } from '@src/ui/styles/utils'
-import React from 'react'
+import React, { useRef } from 'react'
 import ComputerIcon from '../icons/Computer'
 import GitHubIcon from '../icons/GitHub'
 import MoonIcon from '../icons/Moon'
 import SunIcon from '../icons/Sun'
+import FloppyDiscIcon from '../../components/icons/FloppyDisc'
+import JsonIcon from '../../components/icons/Json'
 import Menu from '../menus/Menu'
 import SequelizeUiLogo from '../SequelizeUiLogo'
+import Button from '../form/Button/Button'
+import { useAlert } from '@src/ui/lib/alert'
 
 type HeaderProps = {
   compact: boolean
@@ -38,6 +42,9 @@ type HeaderProps = {
 function Header({ compact }: HeaderProps): React.ReactElement {
   const { setDarkMode, isExplicit } = useDarkMode()
   const mounted = useDidMount()
+  const { error } = useAlert()
+
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   const items = React.useMemo(
     () => [
@@ -59,6 +66,29 @@ function Header({ compact }: HeaderProps): React.ReactElement {
     ],
     [setDarkMode],
   )
+
+  const handleDownloadButtonClick = () => {
+    if (!fileInputRef.current) return;
+
+    // Triggering the click event on the file input
+    fileInputRef.current.click();
+};
+
+const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+  if (!event.target.files) return;
+    const file = event.target.files[0];
+
+    if (!file) return
+    const reader = new FileReader()
+    reader.onload = (e) => {
+      const text = e.target?.result
+      if (!text) return
+      localStorage.setItem('__SEQUELIZEUI__/schemas', text.toString())
+    }
+    reader.readAsText(file)
+
+};
+
 
   return (
     <header
@@ -92,9 +122,47 @@ function Header({ compact }: HeaderProps): React.ReactElement {
         </h1>
       </RouteLink>
       <div className={classnames(flexCenter, margin('mr-2'))}>
+        <Button onClick={handleDownloadButtonClick} icon={JsonIcon} iconProps={{ size: 4 }} size="text-xs" className={classnames(width('w-24', 'xs:w-22'), display('inline-block'))}>
+          UPLOAD
+        </Button>
+      <input type='file' 
+        ref={fileInputRef}
+        style={{display: 'none'}}
+        onChange={handleFileUpload}
+        />
+      <Button
+        icon={FloppyDiscIcon}
+        iconProps={{ size: 4 }}
+        size="text-xs"
+        className={classnames(width('w-24', 'xs:w-22'), display('inline-block'))}
+        onClick={() => {
+          // Download __SEQUELIZEUI__/schemas from localstorage and save it as a json file
+          const schemas = localStorage.getItem('__SEQUELIZEUI__/schemas')
+
+          if (!schemas) {
+            error('No schemas found in localstorage')
+            return
+          }
+
+          const blob = new Blob([schemas], { type: 'application/json' })
+
+          const url = URL.createObjectURL(blob)
+
+          const a = document.createElement('a')
+          a.href = url
+          a.download = `${new Date().toLocaleString()}-schemas.json`
+
+          document.body.appendChild(a)
+          a.click()
+
+          document.body.removeChild(a)
+        }}
+      >
+        SCHEMA
+      </Button>
         <a
           title="GitHub"
-          className={classnames(textColor('hover:text-blue-700'))}
+          className={classnames(textColor('hover:text-blue-700'), margin('ml-4'))}
           href="https://github.com/tomjschuster/sequelize-ui"
           target="_blank"
           rel="noreferrer"

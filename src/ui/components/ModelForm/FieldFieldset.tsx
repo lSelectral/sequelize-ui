@@ -5,6 +5,7 @@ import {
   Field,
   isDateTimeType,
   isIntegerType,
+  isBooleanType,
   isNumberType,
   isNumericType,
   isStringType,
@@ -96,8 +97,12 @@ function FieldFieldset({ field, errors, onChange, onDelete }: FieldFieldsetProps
   )
 
   const handleChangeAutoincrement = React.useCallback(
-    (autoincrement: boolean) =>
-      isIntegerType(field.type) && handleChange({ type: { ...field.type, autoincrement } }),
+    (autoincrement: boolean) =>{
+      // Only primary keys can be autoincrement
+      if (!field.primaryKey) return
+
+      isIntegerType(field.type) && handleChange({ type: { ...field.type, autoincrement } })
+    },
     [field.type, handleChange],
   )
 
@@ -131,6 +136,14 @@ function FieldFieldset({ field, errors, onChange, onDelete }: FieldFieldsetProps
       if (!isNumericType(field.type)) return
       if (!field.type.precision) return
       handleChange({ type: { ...field.type, precision: { ...field.type.precision, scale } } })
+    },
+    [field.type, handleChange],
+  )
+
+  const handleChangeBooleanDefault = React.useCallback(
+    (defaultValue: boolean) =>{
+      console.log('defaultValue', defaultValue)
+      isBooleanType(field.type) && handleChange({ type: { ...field.type, defaultValue: defaultValue === undefined ? null : defaultValue } })
     },
     [field.type, handleChange],
   )
@@ -210,7 +223,7 @@ function FieldFieldset({ field, errors, onChange, onDelete }: FieldFieldsetProps
               checked={!!field.type.unsigned}
               onChange={handleChangeUnsigned}
             />
-            {isIntegerType(field.type) && (
+            {isIntegerType(field.type) && field.primaryKey && (
               <Checkbox
                 id={`field-autoincrement-${field.id}`}
                 label="Autoincrement"
@@ -260,6 +273,18 @@ function FieldFieldset({ field, errors, onChange, onDelete }: FieldFieldsetProps
             onChange={handleChangeUuidDefault}
           />
         )}
+
+        {
+          isBooleanType(field.type) && (
+            <Checkbox
+              id={`boolean-default-${field.id}`}
+              label="Default"
+              checked={!!field.type.defaultValue}
+              onChange={handleChangeBooleanDefault}
+            />
+          )
+        }
+
       </div>
       {isNumericType(field.type) && (
         <>
@@ -284,6 +309,7 @@ function FieldFieldset({ field, errors, onChange, onDelete }: FieldFieldsetProps
           />
         </>
       )}
+
       <div
         className={classnames(
           gridColumn('col-span-12', 'xs:col-span-6'),

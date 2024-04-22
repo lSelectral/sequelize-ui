@@ -119,6 +119,10 @@ export default function ModelView({
           </li>
         </ul>
       </div>
+
+      <div className={classnames(sectionWide, margin('mt-6'))}>
+        <h3 className={classnames(title)}>Options</h3>
+      </div>
     </div>
   )
 }

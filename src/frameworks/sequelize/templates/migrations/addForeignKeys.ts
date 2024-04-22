@@ -28,7 +28,7 @@ export function addForeignKeysMigration({
 
   return lines([
     // TODO refactor type defs to use either Sequelize or DataTypes
-    `const DataTypes = require('sequelize').DataTypes`,
+    `const { QueryInterface, Sequelize, DataTypes } = require('sequelize')`,
     blank(),
     `module.exports = {`,
     up({ constraints }),
@@ -43,6 +43,10 @@ type UpArgs = {
 function up({ constraints }: UpArgs): string {
   return lines(
     [
+      '/**',
+      ' * @param {QueryInterface} queryInterface ',
+      ' * @param {Sequelize} Sequelize ',
+      ' */',
       `up: async (queryInterface, Sequelize) => {`,
       lines(
         constraints.map((constraint) => {
@@ -68,6 +72,10 @@ type DownArgs = {
 function down({ constraints }: DownArgs): string {
   return lines(
     [
+      '/**',
+      ' * @param {QueryInterface} queryInterface ',
+      ' * @param {Sequelize} Sequelize ',
+      ' */',
       `down: async (queryInterface, Sequelize) => {`,
       lines(
         constraints.map(({ sourceTable, name }) => {

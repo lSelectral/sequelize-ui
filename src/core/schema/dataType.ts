@@ -23,14 +23,15 @@ export type DataType =
 export type Precision = { precision: number; scale: number | null }
 
 type DataTypeBase<T extends DataTypeType> = { type: T }
-type StringOptions = { length: number | null }
+type StringOptions = { length: number | null, defaultValue: string | null }
 type DateTimeOptions = { defaultNow: boolean }
-type NumberOptions = { unsigned: boolean }
+type NumberOptions = { unsigned: boolean, defaultValue: number | null }
 type IntegerOptions = NumberOptions & { autoincrement: boolean }
 type NumericOptions = NumberOptions & { precision: Precision | null }
 type EnumOptions = { values: string[] }
 type ArrayOptions = { arrayType: DataType }
 type UuidOptions = { defaultVersion: UuidType | null }
+type BooleanOptions = { defaultValue: boolean | null }
 
 export type StringDataType = DataTypeBase<DataTypeType.String> & StringOptions
 export type TextDataType = DataTypeBase<DataTypeType.Text>
@@ -45,7 +46,7 @@ export type DecimalDataType = DataTypeBase<DataTypeType.Decimal> & NumericOption
 export type DateTimeDataType = DataTypeBase<DataTypeType.DateTime> & DateTimeOptions
 export type DateDataType = DataTypeBase<DataTypeType.Date> & DateTimeOptions
 export type TimeDataType = DataTypeBase<DataTypeType.Time> & DateTimeOptions
-export type BooleanDataType = DataTypeBase<DataTypeType.Boolean>
+export type BooleanDataType = DataTypeBase<DataTypeType.Boolean> & BooleanOptions
 export type EnumDataType = DataTypeBase<DataTypeType.Enum> & EnumOptions
 export type ArrayDataType = DataTypeBase<DataTypeType.Array> & ArrayOptions
 export type JsonDataType = DataTypeBase<DataTypeType.Json>
@@ -136,6 +137,9 @@ function displayDataTypeOptions(dataType: DataType): string {
     dataType.type === DataTypeType.Uuid &&
       !!dataType.defaultVersion &&
       `${dataType.defaultVersion}`,
+    dataType.type === DataTypeType.Boolean &&
+      !!dataType.defaultValue &&
+      `default: ${dataType.defaultValue}`,
     isDateTimeType(dataType) && dataType.defaultNow && 'default to now',
     isNumberType(dataType) && dataType.unsigned && 'unsigned',
     isIntegerType(dataType) && dataType.autoincrement && 'autoincrement',
@@ -199,6 +203,10 @@ export function isDateTimeType(dataType: DataType): dataType is DateTimeTypes {
   return dateTypeTypes.includes(dataType.type)
 }
 
+export function isBooleanType(dataType: DataType): dataType is BooleanDataType {
+  return dataType.type === DataTypeType.Boolean
+}
+
 export type NumberType =
   | IntegerDataType
   | BigIntDataType
@@ -244,12 +252,13 @@ export function isNumericType(dataType: DataType): dataType is NumericType {
   return numericTypes.includes(dataType.type)
 }
 
-const defaultStringOptions: StringOptions = { length: null }
-const defaultNumberOptions: NumberOptions = { unsigned: false }
+const defaultStringOptions: StringOptions = { length: null, defaultValue: null }
+const defaultNumberOptions: NumberOptions = { unsigned: false, defaultValue: null }
 const defaultIntegerOptions: IntegerOptions = { ...defaultNumberOptions, autoincrement: false }
 const defaultNumericOptions: NumericOptions = { ...defaultNumberOptions, precision: null }
 const defaultDateTimeOptions: DateTimeOptions = { defaultNow: false }
 const defaultUuidOptions: UuidOptions = { defaultVersion: null }
+const defaultBooleanOptions: BooleanOptions = { defaultValue: false }
 
 export function stringDataType(opts: Partial<StringOptions> = {}): StringDataType {
   return { type: DataTypeType.String, ...defaultStringOptions, ...opts }
@@ -304,7 +313,7 @@ export function timeDataType(opts: Partial<DateTimeOptions> = {}): TimeDataType 
 }
 
 export function booleanDataType(): BooleanDataType {
-  return { type: DataTypeType.Boolean }
+  return { type: DataTypeType.Boolean, ...defaultBooleanOptions }
 }
 
 export function enumDataType(opts: EnumOptions = { values: [] }): EnumDataType {

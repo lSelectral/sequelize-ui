@@ -171,7 +171,7 @@ function displayNumeric(dataType: NumericType): string {
   const { precision } = dataType
 
   const numeric = precision
-    ? `.PRECISION(${precision.precision}${precision.scale ? `, ${precision.scale}` : ''})`
+    ? `(${precision.precision}${precision.scale ? `, ${precision.scale}` : ''})`
     : ''
 
   return `${displayNumber(dataType)}${numeric}`

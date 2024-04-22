@@ -1,4 +1,12 @@
-import { Association, emptyAssociation, emptyField, Field, Model, Schema } from '@src/core/schema'
+import {
+  Association,
+  emptyAssociation,
+  emptyField,
+  emptyIndex,
+  Field,
+  Model,
+  Schema,
+} from '@src/core/schema'
 import { ModelErrors } from '@src/core/validation/schema'
 import usePrevious from '@src/ui/hooks/usePrevious'
 import {
@@ -20,6 +28,8 @@ import PlusCircleIcon from '../icons/Plus'
 import AssociationFieldset, { associationTypeId } from './AssociationFieldset'
 import FieldFieldset, { fieldNameId } from './FieldFieldset'
 import ModelFieldset, { modelNameId } from './ModelFieldset'
+import { IndexesOptions } from '@src/core/schema/constraint'
+import IndexFieldset from './IndexFieldset'
 
 type ModelFormProps = {
   model: Model
@@ -130,6 +140,24 @@ export default function ModelForm({
     [model, onChange],
   )
 
+  const handleChangeIndex = React.useCallback(
+    (id: IndexesOptions['id'], changes: Partial<IndexesOptions>) =>
+      onChange({
+        ...model,
+        indexes: model.indexes.map((i) => (i.id === id ? { ...i, ...changes } : i)),
+      }),
+    [model, onChange],
+  )
+
+  const handleDeleteIndex = React.useCallback(
+    (id: IndexesOptions['id']) =>
+      onChange({
+        ...model,
+        indexes: model.indexes.filter((i) => i.id !== id),
+      }),
+    [model, onChange],
+  )
+
   const handleClickAddField = React.useCallback(
     () => onChange({ ...model, fields: [...model.fields, emptyField()] }),
     [model, onChange],
@@ -144,6 +172,13 @@ export default function ModelForm({
     [model, onChange],
   )
 
+  const handleClickAddIndex = React.useCallback(() => {
+    onChange({
+      ...model,
+      indexes: [...(model.indexes || []), emptyIndex()],
+    })
+  }, [model, onChange])
+
   return (
     <form
       onSubmit={(evt) => evt.preventDefault()}
@@ -156,7 +191,7 @@ export default function ModelForm({
     >
       <div className={classnames(sectionWide)}>
         <h2 className={classnames(title)}>Model</h2>
-        <ModelFieldset name={model.name} onChange={handleChangeModel} errors={errors} />
+        <ModelFieldset model={model} onChange={handleChangeModel} errors={errors} />
       </div>
       <div className={classnames(sectionWide, margin('mb-6'))}>
         <h3 className={classnames(title)}>Fields</h3>
@@ -213,6 +248,35 @@ export default function ModelForm({
               icon={PlusCircleIcon}
               iconProps={{ size: 6 }}
               onClick={handleClickAddAssociation}
+            />
+          </li>
+        </ul>
+      </div>
+
+      <div className={classnames(sectionWide, margin('mt-6'))}>
+        <h3 className={classnames(title)}>INDEXES</h3>
+
+        <ul className={panelGrid}>
+          {model.indexes?.map((index) => (
+            <li key={`index-form-${index.id}`} className={classnames(panel)}>
+              <IndexFieldset
+                index={index}
+                model={model}
+                onChange={handleChangeIndex}
+                onDelete={handleDeleteIndex}
+                schema={schema}
+              />
+            </li>
+          ))}
+          <li>
+            <PanelButton
+              label="Add index"
+              className={classnames(
+                backgroundColor('hover:bg-green-50', toClassname('dark:hover:bg-green-900')),
+              )}
+              icon={PlusCircleIcon}
+              iconProps={{ size: 6 }}
+              onClick={handleClickAddIndex}
             />
           </li>
         </ul>

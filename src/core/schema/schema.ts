@@ -3,6 +3,7 @@ import { uniqueId } from '@src/utils/string'
 import { stringDataType } from '.'
 import { Association, AssociationTypeType } from './association'
 import { DataType } from './dataType'
+import { IndexesOptions } from './constraint'
 
 export type Schema = {
   id: string
@@ -18,8 +19,12 @@ export type Model = {
   name: string
   fields: Field[]
   associations: Association[]
+  indexes: IndexesOptions[]
   createdAt: string
   updatedAt: string
+  timestamps: boolean
+  paranoid: boolean
+  comment?: string
 }
 
 export type Field = {
@@ -29,6 +34,7 @@ export type Field = {
   primaryKey: boolean
   required: boolean
   unique: boolean
+  comment?: string
 }
 
 export function emptySchema(): Schema {
@@ -50,8 +56,11 @@ export function emptyModel(): Model {
     name: '',
     fields: [],
     associations: [],
+    indexes: [],
     createdAt: time,
     updatedAt: time,
+    timestamps: false,
+    paranoid: false,
   }
 }
 
@@ -70,6 +79,15 @@ export function field(props: Partial<Field> = {}): Field {
   return {
     ...emptyField(),
     ...props,
+  }
+}
+
+export function emptyIndex(): IndexesOptions {
+  return {
+    fields: [],
+    id: uniqueId(),
+    name: '',
+    using: 'BTREE',
   }
 }
 

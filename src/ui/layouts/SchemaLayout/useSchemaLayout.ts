@@ -176,6 +176,7 @@ export function useSchemaLayout({
   const updateModel = React.useCallback(
     (model: Model) => {
       if (state.type === SchemaLayoutStateType.EDIT_MODEL) {
+        console.log("Updating model", model)
         setState({ ...state, model })
       }
     },

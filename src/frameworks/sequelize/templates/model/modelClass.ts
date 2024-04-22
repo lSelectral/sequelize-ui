@@ -8,7 +8,7 @@ import {
   noSupportedDetails,
   notSupportedComment,
 } from '../../utils/dataTypes'
-import { fieldTemplate, getTimestampFields } from '../../utils/field'
+import { fieldTemplate, getParanoidFields, getTimestampFields } from '../../utils/field'
 import { ModelAssociation, modelName } from '../../utils/model'
 
 export type ModelClassTempalteArgs = {
@@ -31,10 +31,14 @@ export function modelClassTemplate({
     : null
 
   const omit = associationAliases ? `, {omit: ${name}Associations}` : ''
+  const attributesType = `export type ${name}Attributes = InferAttributes<${name}${omit}>`
 
   return lines([
-    associationAliases ? associationsType : null,
-    associationAliases ? blank() : null,
+    lines([
+      associationAliases ? associationsType : null,
+      attributesType || null,
+      associationAliases ? blank() : null,
+    ]),
     `export class ${name} extends Model<`,
     lines([`InferAttributes<${name}${omit}>,`, `InferCreationAttributes<${name}${omit}>`], {
       depth: 2,
@@ -44,7 +48,15 @@ export function modelClassTemplate({
       depth: 2,
     }),
     lines(
-      getTimestampFields({ dbOptions }).map((field) => classFieldType(field, dbOptions, true)),
+      getTimestampFields({ dbOptions, model }).map((field) =>
+        classFieldType(field, dbOptions, true),
+      ),
+      { depth: 2 },
+    ),
+    lines(
+      getParanoidFields({ dbOptions, model }).map((field) =>
+        classFieldType(field, dbOptions, false),
+      ),
       { depth: 2 },
     ),
     associations.length ? blank() : null,
@@ -78,15 +90,85 @@ export function modelClassTemplate({
             `${name}.init({`,
             lines(
               model.fields
-                .concat(getTimestampFields({ dbOptions }))
+                .concat(getTimestampFields({ dbOptions, model }))
+                .concat(getParanoidFields({ dbOptions, model }))
                 .map((field) => fieldTemplate({ field, dbOptions })),
               { depth: 2, separator: ',' },
             ),
             '}, {',
-            lines(['sequelize', tableName({ model, dbOptions })], {
-              depth: 2,
-              separator: ',',
-            }),
+            lines(
+              [
+                'sequelize',
+                model.paranoid ? 'paranoid: true' : 'paranoid: false',
+                model.timestamps ? 'timestamps: true' : 'timestamps: false',
+                model.comment ? `comment: '${model.comment}'` : null,
+                tableName({ model, dbOptions }),
+                model.indexes
+                  ? lines([
+                      'indexes: [',
+                      lines(
+                        model.indexes.map((index) => {
+                          return lines(
+                            [
+                              '{',
+                              lines(
+                                [
+                                  `name: "${index.name}"`,
+                                  index.unique ? 'unique: true' : null,
+                                  `using: "${index.using}"`,
+                                  lines([
+                                    `fields: [`,
+                                    lines(
+                                      index.fields.map((field) => {
+                                        return lines(
+                                          [
+                                            `{`,
+                                            lines(
+                                              [
+                                                `name: "${field.name}"`,
+                                                field.order ? `order: "${field.order}"` : null,
+                                                field.collate
+                                                  ? `collate: "${field.collate}"`
+                                                  : null,
+                                                field.length ? `length: ${field.length}` : null,
+                                                field.operator ? `length: ${field.operator}` : null,
+                                              ],
+                                              {
+                                                depth: 2,
+                                                separator: ',',
+                                              },
+                                            ),
+                                            `}`,
+                                          ],
+                                          { depth: 2 },
+                                        )
+                                      }),
+                                      { depth: 2, separator: ',' },
+                                    ),
+                                  ]),
+                                  ']',
+                                ],
+                                {
+                                  depth: 2,
+                                  separator: ',',
+                                },
+                              ),
+                              '}',
+                            ],
+                            { depth: 2 },
+                          )
+                        }),
+                        { depth: 2, separator: ',' },
+                      ),
+                      ']',
+                    ])
+                  : null,
+              ],
+              {
+                depth: 2,
+                separator: ',',
+              },
+            ),
             '})',
             blank(),
             `return ${name}`,

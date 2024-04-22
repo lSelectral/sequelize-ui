@@ -101,6 +101,10 @@ function defaultField(dataType: DataType) {
     return `defaultValue: ${sequelizeUuidVersion(dataType.defaultVersion)}`
   }
 
+  if (dataType.type === DataTypeType.Boolean && dataType.defaultValue !== undefined) {
+    return `defaultValue: ${dataType.defaultValue}`
+  }
+
   return null
 }
 
@@ -146,9 +150,11 @@ export function getPkName({ model, dbOptions }: GetPkNameArgs): string {
 
 type GetTimestampFieldsTemplateArgs = {
   dbOptions: DbOptions
+  model: Model
 }
-export function getTimestampFields({ dbOptions }: GetTimestampFieldsTemplateArgs): Field[] {
-  if (!dbOptions.timestamps) return []
+export function getTimestampFields({ dbOptions, model }: GetTimestampFieldsTemplateArgs): Field[] {
+  if (!model?.timestamps) return []
+  
   const createdAt: Field = {
     id: uniqueId(),
     name: caseByDbCaseStyle('created at', dbOptions.caseStyle),
@@ -168,4 +174,24 @@ export function getTimestampFields({ dbOptions }: GetTimestampFieldsTemplateArgs
   }
 
   return [createdAt, updatedAt]
+}
+
+type GetParanoidFieldsTemplateArgs = {
+  dbOptions: DbOptions
+  model: Model
+}
+
+export function getParanoidFields({ dbOptions, model }: GetParanoidFieldsTemplateArgs): Field[] {
+  if (!model?.paranoid) return []
+
+  const deletedAt: Field = {
+    id: uniqueId(),
+    name: caseByDbCaseStyle('deleted at', dbOptions.caseStyle),
+    type: dateTimeDataType(),
+    primaryKey: false,
+    required: false,
+    unique: false,
+  }
+
+  return [deletedAt]
 }
